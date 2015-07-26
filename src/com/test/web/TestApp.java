@@ -27,6 +27,8 @@ import org.apache.http.message.BasicNameValuePair;
  */
 public class TestApp {
     private final String USER_AGENT = "Mozilla/5.0";
+    private final String PROXY_HOST = "http://proxy.service.com";
+    private final int    PROXY_PORT = 8080;
 
     public static void main(String[] args) {
         try {
@@ -103,4 +105,32 @@ public class TestApp {
         //print result
         System.out.println(response.toString());
     }
+
+    public CloseableHttpResponse readObject(String serviceURL) throws ServiceException {
+        CloseableHttpResponse response = null;
+
+        System.out.println("<TestApp.readObject> " + serviceURL);
+
+        try {
+            // Define the proxy configurations
+            HttpHost proxy = new HttpHost(PROXY_HOST, PROXY_PORT);
+            DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
+            CloseableHttpClient httpclient = HttpClients.custom()
+                    .setRoutePlanner(routePlanner)
+                    .build();
+
+            // Read from the service
+            HttpGet httpGet = new HttpGet(serviceURL);
+            httpGet.addHeader("key1", "value1");
+            httpGet.addHeader("key2", "value2");
+
+            response = httpclient.execute(httpGet);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new ServiceException(e.getMessage());
+        }
+
+        return response;
+    }
+
 }
